@@ -365,6 +365,10 @@ def training_loop(
             if rank == 0:
                 with open(snapshot_pkl, 'wb') as f:
                     pickle.dump(snapshot_data, f)
+                #copying the snapshot pickle to google drive
+                google_drive_path = f"/content/drive/MyDrive/cpvton-64-pytorch-ada-snapshots/{time.time()}network-snapshot-{cur_nimg//1000:06d}.pkl";
+                print(f"copying the snapshot pickle to google drive at {google_drive_path}")
+                shutil.copy(snapshot_pkl, google_drive_path)
 
         # Evaluate metrics.
         if (snapshot_data is not None) and (len(metrics) > 0):
