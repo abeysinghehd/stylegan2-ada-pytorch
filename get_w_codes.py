@@ -1,15 +1,13 @@
 """Get the mapped W values for Z values"""
 
-import os
 import re
 from typing import List, Optional
 
 import click
 import dnnlib
 import numpy as np
-import PIL.Image
 import torch
-import csv
+import pandas as pd
 
 import legacy
 
@@ -42,11 +40,9 @@ def generate_w_values(
 ):
 
     print('Loading networks from "%s"...' % network_pkl)
-    device = torch.device('cuda')
+    device = torch.device('cpu')
     with dnnlib.util.open_url(network_pkl) as f:
         G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
-
-    # os.makedirs(outdir, exist_ok=True)
 
     if seeds is None:
         ctx.fail('--seeds option is required to get the W values')
@@ -54,19 +50,16 @@ def generate_w_values(
     # Labels.
     label = torch.zeros([1, G.c_dim], device=device)
     
-    with open(outfilecsv, 'w') as f:
-        writer = csv.writer(f)
-
-    # Generate images.
+    all = []
     for seed_idx, seed in enumerate(seeds):
-        
         z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
         ws = G.mapping(z, label, truncation_psi=truncation_psi)
         unique_weights = ws[0][0].numpy()
-        csv_row = ','.join([str(seed)] + [str(i) for i in unique_weights])
-        writer.writerow(csv_row)
-        print('Generated ws value for seed %d (' % (seed))
-        print(f"ws Tensor: \n {ws} \n")
+        all.append([str(seed)] + [str(i) for i in unique_weights])
+        df = pd.DataFrame(all)
+        df.to_csv(outfilecsv)
+    
+    print(all)
 
 #----------------------------------------------------------------------------
 
