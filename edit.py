@@ -103,6 +103,18 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
   latent_codes = np.random.randn(10, 14, 512)
   latent_codes = latent_codes.reshape(-1, 14, 512)
   latent_codes = latent_codes.astype(np.float32)
+  
+  # Generate images.
+  latent_codes = []
+  label = torch.zeros([1, G.c_dim], device=device)
+  seeds = [101,102,103,104,105,106,107,108,109,110]
+  for seed_idx, seed in enumerate(seeds):
+      z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
+      ws = G.mapping(z, label, truncation_psi=0.7)
+      latent_codes.append(ws)
+  latent_codes = np.array(latent_codes)
+  latent_codes = latent_codes.astype(np.float32)
+
   np.save(os.path.join(output_dir, 'latent_codes.npy'), latent_codes)
   total_num = latent_codes.shape[0]
 
@@ -121,8 +133,6 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
       
       save_path = os.path.join(output_dir,
                                  f'{sample_id:03d}_{interpolation_id:03d}.jpg')
-      
-      device = torch.device('cuda')
       interpolations_batch = torch.from_numpy(interpolations_batch).to(device)
       # print(f'type of interpolations_batch {type(interpolations_batch)}')
       # print(f'shape of interpolations_batch {interpolations_batch.shape}')
