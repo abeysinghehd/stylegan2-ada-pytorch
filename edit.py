@@ -112,7 +112,7 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
       z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
       ws = G.mapping(z, label, truncation_psi=0.7)
       latent_codes.append(ws)
-  latent_codes = np.array(latent_codes)
+  latent_codes = np.array(latent_codes.cpu().detach().numpy())
   latent_codes = latent_codes.astype(np.float32)
 
   np.save(os.path.join(output_dir, 'latent_codes.npy'), latent_codes)
