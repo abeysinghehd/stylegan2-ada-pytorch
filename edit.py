@@ -10,7 +10,7 @@ import legacy
 import PIL.Image
 
 
-def get_batch_inputs(self, latent_codes, batch_size=1):
+def get_batch_inputs(latent_codes, batch_size=1):
     """Gets batch inputs from a collection of latent codes.
 
     This function will yield at most `self.batch_size` latent_codes at a time.
@@ -113,6 +113,8 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
                                         # start_distance=args.start_distance,
                                         # end_distance=args.end_distance,
                                         steps)
+    print(f'shape of interpolations {interpolations.shape}')
+
     interpolation_id = 0
     for interpolations_batch in get_batch_inputs(interpolations):
       assert interpolations_batch.shape[1:] == (G.num_ws, G.w_dim)
@@ -120,7 +122,11 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
       save_path = os.path.join(output_dir,
                                  f'{sample_id:03d}_{interpolation_id:03d}.jpg')
       
-      img = G.synthesis(interpolations_batch.unsqueeze(0), noise_mode='const')
+      device = torch.device('cuda')
+      interpolations_batch = torch.from_numpy(interpolations_batch).to(device)
+      # print(f'type of interpolations_batch {type(interpolations_batch)}')
+      # print(f'shape of interpolations_batch {interpolations_batch.shape}')
+      img = G.synthesis(interpolations_batch, noise_mode='const')
       img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
       img = PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(save_path)
       interpolation_id += 1
@@ -132,7 +138,7 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
 
 if __name__ == '__main__':
   linear_interpolate_images(
-    boundry_path='/content/drive/MyDrive/Colab-Fashion-Synthesis/sleeve_boundry_v83r73.npy'
+    boundry_path='/content/drive/MyDrive/Colab-Fashion-Synthesis/sleeve_boundry_v83r73.npy',
     output_dir = '/content/out',
     network_pkl = '/content/network2.pkl', 
     steps = 10
