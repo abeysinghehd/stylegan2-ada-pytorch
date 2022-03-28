@@ -92,6 +92,8 @@ def linear_interpolate(latent_code,
 @click.option('--outdir', 'output_dir', help='Where to save the results', required=True, metavar='DIR')
 @click.option('--seeds', type=num_range, required=True, help='List of random seeds')
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=0.7, show_default=True)
+@click.option('--start_distance', type=float, help='The distance to the boundary where the manipulation starts', default=-3.0, show_default=True)
+@click.option('--end_distance', type=float, help='The distance to the boundary where the manipulation ends.', default=3.0, show_default=True)
 def linear_interpolate_images(
   ctx: click.Context,
   network_pkl: str,
@@ -99,7 +101,9 @@ def linear_interpolate_images(
   boundry_path: str,
   output_dir: str,
   seeds: Optional[List[int]],
-  truncation_psi: float
+  truncation_psi: float,
+  start_distance: float,
+  end_distance: float,
 ):
   """Interpolate function."""
 
@@ -149,9 +153,9 @@ def linear_interpolate_images(
   for sample_id in tqdm(range(total_num), leave=False):
     interpolations = linear_interpolate(latent_codes[sample_id:sample_id + 1],
                                         boundary,
-                                        # start_distance=args.start_distance,
-                                        # end_distance=args.end_distance,
-                                        steps)
+                                        start_distance=start_distance,
+                                        end_distance=end_distance,
+                                        steps=steps)
     print(f'shape of interpolations {interpolations.shape}')
 
     interpolation_id = 0
@@ -168,6 +172,7 @@ def linear_interpolate_images(
       img = PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(save_path)
       interpolation_id += 1
       
+    print(f 'interpolation_id : {interpolation_id}, steps : {steps}')
     assert interpolation_id == steps
     print(f'  Finished sample {sample_id:3d}.')
   print(f'Successfully edited {total_num} samples.')
