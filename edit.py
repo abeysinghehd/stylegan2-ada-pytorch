@@ -92,7 +92,15 @@ def linear_interpolate(latent_code,
 @click.option('--outdir', 'output_dir', help='Where to save the results', required=True, metavar='DIR')
 @click.option('--seeds', type=num_range, required=True, help='List of random seeds')
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=0.7, show_default=True)
-def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps, truncation_psi, seeds):
+def linear_interpolate_images(
+  ctx: click.Context,
+  network_pkl: str,
+  steps: int,
+  boundry_path: str,
+  output_dir: str,
+  seeds: Optional[List[int]],
+  truncation_psi: float
+):
   """Interpolate function."""
 
   print(f'Initializing generator.')
