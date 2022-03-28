@@ -1,14 +1,23 @@
 import numpy as np
 import os.path
-import argparse
-import cv2
 import numpy as np
 from tqdm import tqdm
 import torch
 import dnnlib
 import legacy
 import PIL.Image
+import click
+from typing import List, Optional
 
+def num_range(s: str) -> List[int]:
+    '''Accept either a comma separated list of numbers 'a,b,c' or a range 'a-c' and return as a list of ints.'''
+
+    range_re = re.compile(r'^(\d+)-(\d+)$')
+    m = range_re.match(s)
+    if m:
+        return list(range(int(m.group(1)), int(m.group(2))+1))
+    vals = s.split(',')
+    return [int(x) for x in vals]
 
 def get_batch_inputs(latent_codes, batch_size=1):
     """Gets batch inputs from a collection of latent codes.
@@ -74,9 +83,16 @@ def linear_interpolate(latent_code,
                    f'But {latent_code.shape} is received.')
 
 
-def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
-  """Main function."""
-  # args = parse_args()
+@click.command()
+@click.pass_context
+@click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
+@click.option('--steps', help='Number of steps', default=10, type=int, metavar='INT')
+@click.option('--boundry', 'boundry_path', help='Path of the boundry file', metavar='PATH', required=True)
+@click.option('--outdir', 'output_dir', help='Where to save the results', required=True, metavar='DIR')
+@click.option('--seeds', type=num_range, required=True, help='List of random seeds')
+@click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=0.7, show_default=True)
+def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps, truncation_psi, seeds):
+  """Interpolate function."""
 
   print(f'Initializing generator.')
   print('Loading networks from "%s"...' % network_pkl)
@@ -107,10 +123,10 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
   # Generate images.
   latent_codes = []
   label = torch.zeros([1, G.c_dim], device=device)
-  seeds = [101,102,103,104,105,106,107,108,109,110]
+  # seeds = [101,102,103,104,105,106,107,108,109,110]
   for seed_idx, seed in enumerate(seeds):
       z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
-      ws = G.mapping(z, label, truncation_psi=0.7)
+      ws = G.mapping(z, label, truncation_psi=truncation_psi)
       ws = ws.to('cpu').numpy()
       latent_codes.append(ws)
   latent_codes = np.array(latent_codes)
@@ -149,12 +165,13 @@ def linear_interpolate_images(boundry_path, output_dir, network_pkl, steps):
 
 
 if __name__ == '__main__':
-  linear_interpolate_images(
-    boundry_path='/content/drive/MyDrive/Colab-Fashion-Synthesis/sleeve_boundry_v83r73.npy',
-    output_dir = '/content/out',
-    network_pkl = '/content/network2.pkl', 
-    steps = 10
-)
+  linear_interpolate_images() # pylint: disable=no-value-for-parameter
+  # linear_interpolate_images(
+    # boundry_path='/content/drive/MyDrive/colab_resources/sleeve_boundry_v83r73.npy',
+    # output_dir = '/content/out',
+    # network_pkl = '/content/network2.pkl', 
+    # steps = 10
+  # )
 
 
 
