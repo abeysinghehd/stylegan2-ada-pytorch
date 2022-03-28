@@ -172,7 +172,7 @@ def linear_interpolate_images(
       img = PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(save_path)
       interpolation_id += 1
       
-    print(f 'interpolation_id : {interpolation_id}, steps : {steps}')
+    print(f'interpolation_id : {interpolation_id}, steps : {steps}')
     assert interpolation_id == steps
     print(f'  Finished sample {sample_id:3d}.')
   print(f'Successfully edited {total_num} samples.')
