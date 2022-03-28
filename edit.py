@@ -8,6 +8,7 @@ import legacy
 import PIL.Image
 import click
 from typing import List, Optional
+import re
 
 def num_range(s: str) -> List[int]:
     '''Accept either a comma separated list of numbers 'a,b,c' or a range 'a-c' and return as a list of ints.'''
